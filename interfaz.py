@@ -5,9 +5,28 @@ import tkinter as tk
 # TODO: cuando se agrega una tarea nueva, agregarla a la lista de tareas. Solo numero y descripcion 
 # TODO: OPCIONAL limitar la longitud de la descripcion?
 def nuevaTarea_clicked():
-    text = entry1.get()
-    # Perform an action with the text from entry1
-    print("Button 1 clicked with text:", text)
+    nuevoNumero = numeroTarea.get()
+    nuevaDescripcion = descripcionTarea.get()
+    nuevaDuracion = duracionTarea.get()
+    nuevoNombre = str(nuevoNumero)
+
+    if validarEntradas(nuevoNumero, nuevaDescripcion, nuevaDuracion, nuevoNombre):
+        agregarTareaALista(nuevoNumero, nuevaDescripcion)
+        return nuevoNumero, nuevaDescripcion, nuevaDuracion, nuevoNombre
+    else:
+        print("Entradas invalidas")
+
+def validarEntradas(nuevoNumero, nuevaDescripcion, nuevaDuracion):
+    if not nuevoNumero.isnumeric():
+        return False
+    if not nuevaDescripcion.isalpha() and len(nuevaDescripcion) > 50:
+        return False
+    if not nuevaDuracion.isnumeric():
+        return False
+    return True
+
+def agregarTareaALista(numero, descripcion):
+    listaTareas.insert(tk.END, numero + " - " + descripcion)
 
 # Cuando le das aqui va a mostrar el grafo con la ruta critica
 # TODO: funcionalidad
