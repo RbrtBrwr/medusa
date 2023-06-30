@@ -11,6 +11,7 @@ tareas = [
     {'numero': 7, 'duracion': 2, 'descripcion': 'Task 7', 'tareas_previas': [5, 6]},
 ]
 
+task_numbers = {1, 2, 3, 4, 5, 6, 7}
 
 def calcularRutaCritica(grafo):
     # Calculo la ruta crítica
@@ -40,7 +41,14 @@ def inicializarGrafo(tareas):
     # Agrego las aristas que representan las dependencias
     for tarea in tareas:
         tareasPrevias = tarea['tareas_previas']
+        if not all(previa in task_numbers for previa in tareasPrevias):
+            raise ValueError("Invalid preceding task number(s) for task {}".format(tarea['numero']))
+        
         for tareaPrevia in tareasPrevias:
+
+            if nx.has_path(grafo, tareaPrevia, tarea['numero']):
+                raise ValueError("Invalid graph: loop detected in task dependencies")
+            
             grafo.add_edge(tareaPrevia, tarea['numero'])
 
     return grafo
