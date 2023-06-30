@@ -48,7 +48,7 @@ def inicializarGrafo(tareas):
 def mostrarGrafo(grafo):
     rutaCritica, duracion = calcularRutaCritica(grafo)
 
-    # posiciono los nodos usando el algoritmo de Kamada-Kawai
+    # posiciono los nodos
     posiciones = nx.planar_layout(grafo)
 
     # Dibujo los nodos
