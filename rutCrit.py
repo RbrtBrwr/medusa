@@ -23,16 +23,16 @@ def calcularRutaCritica(grafo):
     return rutaCritica, duracionTotal
 
 
-def inicializarGrafo(tareas):
+def inicializarGrafo(diccionarioTareas):
     # Creo un grafo dirigido
     grafo = nx.DiGraph()
 
     # Agrego las tareas como nodos al grafo
-    for tarea in tareas:
-        numero = tarea['numero']
-        duracion = tarea['duracion']
-        descripcion = tarea['descripcion']
-        nombre = str(tarea['numero'])
+    for tarea in diccionarioTareas.keys():
+        numero = tarea
+        duracion = diccionarioTareas[tarea]['duracion']
+        descripcion = diccionarioTareas[tarea]['descripcion']
+        nombre = str(tarea)
         grafo.add_node(numero, 
                        duracion=duracion, 
                        descripcion=descripcion, 

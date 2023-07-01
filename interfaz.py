@@ -2,9 +2,28 @@ import tkinter as tk
 import networkx as nx
 import matplotlib.pyplot as plt
 
-tareas = [{'numero': 0, 'duracion': 0, 'descripcion': 'Inicio', 'tareas_previas': []}]
+diccionarioTareas = {}
+
+def revisarNoInterdependencia(numeroTareaNueva, predecesores):
+    if int(numeroTareaNueva) in predecesores:
+        return True
+    
+    for i in predecesores:
+        if i in diccionarioTareas.keys():
+            siguientesPredecesores = diccionarioTareas[i]['tareas_previas']
+            if revisarNoInterdependencia(numeroTareaNueva, siguientesPredecesores):
+                return True
+        
+    return False
+
+
+
+
 task_numbers = set()
 task_numbers.add(0)
+
+# Inicializo el grafo que es el que voy a usar
+
 
 def nuevaTarea_clicked():
     nuevoNumero = numeroTarea.get()
@@ -15,11 +34,18 @@ def nuevaTarea_clicked():
 
     if validarEntradas(nuevoNumero, nuevaDescripcion, nuevaDuracion, nuevasPredecesoras):
         task_numbers.add(int(nuevoNumero))
-        nuevasPredecesoras = [int(x) for x in nuevasPredecesoras]
+        nuevasPredecesoras = [int(x) for x in nuevasPredecesoras if x != '']
         agregarTareaALista(nuevoNumero, nuevaDescripcion, nuevaDuracion, nuevasPredecesoras)
+        print(nuevoNumero)
+        print(nuevasPredecesoras)
+        if revisarNoInterdependencia(nuevoNumero, nuevasPredecesoras):
+            eliminarTarea(int(nuevoNumero))
         return nuevoNumero, nuevaDescripcion, nuevaDuracion, nuevoNombre
     else:
         print("Entradas invalidas")
+
+
+
 
 def validarEntradas(nuevoNumero, nuevaDescripcion, nuevaDuracion, nuevasPredecesoras):
     if not nuevoNumero.isnumeric() or nuevoNumero in task_numbers:
@@ -28,49 +54,75 @@ def validarEntradas(nuevoNumero, nuevaDescripcion, nuevaDuracion, nuevasPredeces
         return False
     if not nuevaDuracion.isnumeric():
         return False
+    if nuevasPredecesoras == ['']:
+        return True
     for i in nuevasPredecesoras:
         if not i.isnumeric():
             return False
-    print(nuevasPredecesoras)
+    # TODO: tengo que hacer una validacion para que no se puedan agregar deadlocks? 
+    # si tarea 1 tiene como predecesora a 0, 0 no puede tener como predecesora a 1
     return True
 
+
 def agregarTareaALista(numero, descripcion, duracion, predecesoras):
-    listaTareas.insert(tk.END, numero + " - " + descripcion)
+    if not str(predecesoras) == '[]':
+        listaTareas.insert(tk.END, numero + " - " + descripcion + " - " + duracion + " - " + str(predecesoras))
+    else:
+        listaTareas.insert(tk.END, numero + " - " + descripcion + " - " + duracion)
+
     tareaAAgregar = {
-        'numero': int(numero),
         'duracion': int(duracion),
         'descripcion': descripcion,
         'tareas_previas': predecesoras
     }
 
-    print(listaTareas)
-
-    tareas.append(tareaAAgregar)
-    print(tareas)
+    diccionarioTareas[int(numero)] = tareaAAgregar
+    # tareas.append(tareaAAgregar)
     clearEntries()
 
 # Cuando le das aqui va a mostrar el grafo con la ruta critica
-# TODO: funcionalidad
+# TODO: maybe
 def mostrarRuta_clicked():
-    grafo = inicializarGrafo(tareas)
+    grafo = inicializarGrafo(diccionarioTareas)
     mostrarGrafo(grafo)
 
 # Cuando le das aqui va a borrar la tarea elejida
 # TODO: funcionalidad y revisar que la tarea ingresada sea valida. Puede causar peos si se quita una que es predecesora de muchas
 def borrarTarea_clicked():
+    if tareaAEliminar.get().isnumeric():
+        # Preguntar si desea eliminar tarea
+        eliminarTareaDeLista(int(tareaAEliminar.get())) 
+        eliminar = tareaAEliminar.get()
+        eliminarTarea(int(eliminar))
+        print("tarea " + eliminar + " eliminada")
+        # TODO: mostrar mensaje de que se elimino la tarea, no se por que no sirve el messagebox
+        # tk.messagebox.showinfo("Tarea eliminada", "La tarea " + eliminar + " ha sido eliminada")
+    tareaAEliminar.delete(0, 'end')
 
-    tarea_a_borrar = []
-    tarea_a_borrar.append(int(tareaAEliminar.get()))
-    global tareas
-    tareas = [tarea for tarea in tareas if tarea['numero'] not in tarea_a_borrar]
+def eliminarTareaDeLista(numeroEliminar):
+    for i in range(listaTareas.size()):
+        if listaTareas.get(i).split(" - ")[0] == str(numeroEliminar):
+            listaTareas.delete(i)
+
+def eliminarTarea(numeroEliminar):
+    del diccionarioTareas[numeroEliminar]
+    eliminarDePredecesores(numeroEliminar)
+
+def eliminarDePredecesores(numeroEliminar):
+    for i in diccionarioTareas.keys():
+        diccionarioTareas[i]['tareas_previas'] = [x for x in diccionarioTareas[i]['tareas_previas'] if x != numeroEliminar]
+
 
 # Esto solo resetea el grafo
 # TODO: funcionalidad
 def borrarProyecto_clicked():
-    text = entry4.get()
-    # Perform an action with the text from entry4
-    print("Button 4 clicked with text:", text)
+    confirm = input("¿Está seguro que desea borrar el proyecto? (y/n): ") == 'y' or input("¿Está seguro que desea borrar el proyecto? (y/n): ") == 'Y'
+    resetearTareas(tareas)
 
+
+
+def resetearTareas(tareas):
+    tareas = {0: {'duracion': 0, 'descripcion': 'Inicio', 'tareas_previas': []}}
 
 def clearEntries():
     numeroTarea.delete(0, 'end')
@@ -91,35 +143,34 @@ def calcularRutaCritica(grafo):
     return rutaCritica, duracionTotal
 
 
-def inicializarGrafo(tareas):
+def inicializarGrafo(diccionarioTareas):
     # Creo un grafo dirigido
     grafo = nx.DiGraph()
 
-    print(task_numbers)
 
     # Agrego las tareas como nodos al grafo
-    for tarea in tareas:
-        numero = tarea['numero']
-        duracion = tarea['duracion']
-        descripcion = tarea['descripcion']
-        nombre = str(tarea['numero'])
+    for tarea in diccionarioTareas.keys():
+        numero = tarea
+        duracion = diccionarioTareas[tarea]['duracion']
+        descripcion = diccionarioTareas[tarea]['descripcion']
+        nombre = str(tarea)
         grafo.add_node(numero, 
                        duracion=duracion, 
                        descripcion=descripcion, 
                        nombre=nombre)
 
     # Agrego las aristas que representan las dependencias
-    for tarea in tareas:
-        tareasPrevias = tarea['tareas_previas']
+    for tarea in diccionarioTareas.keys():
+        tareasPrevias = diccionarioTareas[tarea]['tareas_previas']
         if not all(previa in task_numbers for previa in tareasPrevias):
-            raise ValueError("Tarea predecesora invalida para tarea {}".format(tarea['numero']))
+            raise ValueError("Tarea predecesora invalida para tarea {}".format(tarea))
         
         for tareaPrevia in tareasPrevias:
 
-            if nx.has_path(grafo, tareaPrevia, tarea['numero']):
-                raise ValueError("Grafo invalido: hay un ciclo en las dependencias de las tareas")
+            if not nx.has_path(grafo, tareaPrevia, tarea):
+                # raise ValueError("Grafo invalido: hay un ciclo en las dependencias de las tareas")
             
-            grafo.add_edge(tareaPrevia, tarea['numero'])
+                grafo.add_edge(tareaPrevia, tarea)
 
     return grafo
 
@@ -191,6 +242,7 @@ nuevaTarea.pack()
 mostrarRuta.pack()
 tituloListaTareas.pack()
 listaTareas.pack()
+listaTareas.insert(tk.END, "Numero - Descripcion - Duracion - Predecesoras")
 tituloTareaAEliminar.pack()
 tareaAEliminar.pack()
 borrarTarea.pack()
