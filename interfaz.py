@@ -1,6 +1,7 @@
 import tkinter as tk
 import networkx as nx
 import matplotlib.pyplot as plt
+import rutCrit as rc
 
 diccionarioTareas = {}
 
@@ -59,8 +60,7 @@ def validarEntradas(nuevoNumero, nuevaDescripcion, nuevaDuracion, nuevasPredeces
     for i in nuevasPredecesoras:
         if not i.isnumeric():
             return False
-    # TODO: tengo que hacer una validacion para que no se puedan agregar deadlocks? 
-    # si tarea 1 tiene como predecesora a 0, 0 no puede tener como predecesora a 1
+        
     return True
 
 
@@ -81,13 +81,11 @@ def agregarTareaALista(numero, descripcion, duracion, predecesoras):
     clearEntries()
 
 # Cuando le das aqui va a mostrar el grafo con la ruta critica
-# TODO: maybe
 def mostrarRuta_clicked():
-    grafo = inicializarGrafo(diccionarioTareas)
-    mostrarGrafo(grafo)
+    grafo = rc.setStartFinish(diccionarioTareas)
+    rc.mostrarGrafo(grafo)
 
 # Cuando le das aqui va a borrar la tarea elejida
-# TODO: funcionalidad y revisar que la tarea ingresada sea valida. Puede causar peos si se quita una que es predecesora de muchas
 def borrarTarea_clicked():
     if tareaAEliminar.get().isnumeric():
         # Preguntar si desea eliminar tarea
@@ -117,7 +115,7 @@ def eliminarDePredecesores(numeroEliminar):
 # TODO: funcionalidad
 def borrarProyecto_clicked():
     confirm = input("¿Está seguro que desea borrar el proyecto? (y/n): ") == 'y' or input("¿Está seguro que desea borrar el proyecto? (y/n): ") == 'Y'
-    resetearTareas(tareas)
+    resetearTareas(diccionarioTareas)
 
 
 
@@ -133,71 +131,71 @@ def clearEntries():
 
     numeroTarea.focus_set()
 
-def calcularRutaCritica(grafo):
-    # Calculo la ruta crítica
-    rutaCritica = nx.dag_longest_path(grafo)
+# def calcularRutaCritica(grafo):
+#     # Calculo la ruta crítica
+#     rutaCritica = nx.dag_longest_path(grafo)
 
-    # Calculo la duración total de la ruta crítica
-    duracionTotal = sum(grafo.nodes[n]['duracion'] for n in rutaCritica)
+#     # Calculo la duración total de la ruta crítica
+#     duracionTotal = sum(grafo.nodes[n]['duracion'] for n in rutaCritica)
 
-    return rutaCritica, duracionTotal
-
-
-def inicializarGrafo(diccionarioTareas):
-    # Creo un grafo dirigido
-    grafo = nx.DiGraph()
+#     return rutaCritica, duracionTotal
 
 
-    # Agrego las tareas como nodos al grafo
-    for tarea in diccionarioTareas.keys():
-        numero = tarea
-        duracion = diccionarioTareas[tarea]['duracion']
-        descripcion = diccionarioTareas[tarea]['descripcion']
-        nombre = str(tarea)
-        grafo.add_node(numero, 
-                       duracion=duracion, 
-                       descripcion=descripcion, 
-                       nombre=nombre)
+# def inicializarGrafo(diccionarioTareas):
+#     # Creo un grafo dirigido
+#     grafo = nx.DiGraph()
 
-    # Agrego las aristas que representan las dependencias
-    for tarea in diccionarioTareas.keys():
-        tareasPrevias = diccionarioTareas[tarea]['tareas_previas']
-        if not all(previa in task_numbers for previa in tareasPrevias):
-            raise ValueError("Tarea predecesora invalida para tarea {}".format(tarea))
+
+#     # Agrego las tareas como nodos al grafo
+#     for tarea in diccionarioTareas.keys():
+#         numero = tarea
+#         duracion = diccionarioTareas[tarea]['duracion']
+#         descripcion = diccionarioTareas[tarea]['descripcion']
+#         nombre = str(tarea)
+#         grafo.add_node(numero, 
+#                        duracion=duracion, 
+#                        descripcion=descripcion, 
+#                        nombre=nombre)
+
+#     # Agrego las aristas que representan las dependencias
+#     for tarea in diccionarioTareas.keys():
+#         tareasPrevias = diccionarioTareas[tarea]['tareas_previas']
+#         # if not all(previa in task_numbers for previa in tareasPrevias):
+#             # raise ValueError("Tarea predecesora invalida para tarea {}".format(tarea))
         
-        for tareaPrevia in tareasPrevias:
+#         for tareaPrevia in tareasPrevias:
 
-            if not nx.has_path(grafo, tareaPrevia, tarea):
-                # raise ValueError("Grafo invalido: hay un ciclo en las dependencias de las tareas")
+#             if not nx.has_path(grafo, tareaPrevia, tarea):
+#                 # raise ValueError("Grafo invalido: hay un ciclo en las dependencias de las tareas")
             
-                grafo.add_edge(tareaPrevia, tarea)
+#                 grafo.add_edge(tareaPrevia, tarea)
 
-    return grafo
+#     return grafo
 
-def mostrarGrafo(grafo):
-    rutaCritica, duracion = calcularRutaCritica(grafo)
+# def mostrarGrafo(grafo):
+#     rutaCritica, duracion = calcularRutaCritica(grafo)
 
-    # posiciono los nodos
-    posiciones = nx.planar_layout(grafo)
+#     # posiciono los nodos
+#     posiciones = nx.planar_layout(grafo)
 
-    # Dibujo los nodos
-    colorNodos = ['lightblue' if nodo not in rutaCritica else 'green' for nodo in grafo.nodes()]
-    nx.draw_networkx_nodes(grafo, posiciones, node_size=500, node_color=colorNodos)
+#     # Dibujo los nodos
+#     colorNodos = ['lightblue' if nodo not in rutaCritica else 'green' for nodo in grafo.nodes()]
+#     nx.draw_networkx_nodes(grafo, posiciones, node_size=500, node_color=colorNodos)
     
-    # Dibujo las aristas
-    colorAristas = ['black' if (u, v) not in grafo.edges() or u not in rutaCritica or v not in rutaCritica else 'green' for u, v in grafo.edges()]
-    nx.draw_networkx_edges(grafo, posiciones, arrows=True, edge_color=colorAristas)
+#     # Dibujo las aristas
+#     colorAristas = ['black' if (u, v) not in grafo.edges() or u not in rutaCritica or v not in rutaCritica else 'green' for u, v in grafo.edges()]
+#     nx.draw_networkx_edges(grafo, posiciones, arrows=True, edge_color=colorAristas)
 
-    # Dibujo las etiquetas de los nodos
-    etiquetas = nx.get_node_attributes(grafo, 'nombre')
-    nx.draw_networkx_labels(grafo, posiciones, etiquetas, font_size=10)
+#     # Dibujo las etiquetas de los nodos
+#     etiquetas = nx.get_node_attributes(grafo, 'nombre')
+#     nx.draw_networkx_labels(grafo, posiciones, etiquetas, font_size=10)
 
-    # Muestro el gráfico
-    plt.title("Ruta Crítica de Tareas")
-    # Muestro la duracion en el gráfico
-    plt.text(0.5, 0.5, "Duracion: " + str(duracion), horizontalalignment='right', verticalalignment='bottom')
-    plt.axis('off')
-    plt.show()
+#     # Muestro el gráfico
+#     plt.title("Ruta Crítica de Tareas")
+#     # Muestro la duracion en el gráfico
+#     plt.text(0.5, 0.5, "Duracion: " + str(duracion), horizontalalignment='right', verticalalignment='bottom')
+#     plt.axis('off')
+#     plt.show()
 
 
 # Create the main window
@@ -228,6 +226,7 @@ mostrarRuta = tk.Button(window, text="Mostrar Ruta", command=mostrarRuta_clicked
 borrarTarea = tk.Button(window, text="Borrar Tarea", command=borrarTarea_clicked)
 borrarProyecto = tk.Button(window, text="Borrar Proyecto", command=borrarProyecto_clicked)
 
+
 # Add the text entries and buttons to the window
 tituloNumeroTarea.pack()
 numeroTarea.pack()
@@ -247,6 +246,22 @@ tituloTareaAEliminar.pack()
 tareaAEliminar.pack()
 borrarTarea.pack()
 borrarProyecto.pack()
+
+testTareasConInicioYFin = {1:{'duracion': 4, 'descripcion': 'Tarea 1', 'tareas_previas': []},
+              2:{'duracion': 2, 'descripcion': 'Tarea 2', 'tareas_previas': [1]},
+              3:{'duracion': 5, 'descripcion': 'Tarea 3', 'tareas_previas': [1]},
+                4:{'duracion': 3, 'descripcion': 'Tarea 4', 'tareas_previas': [1]},
+                5:{'duracion': 3, 'descripcion': 'Tarea 5', 'tareas_previas': [2, 3]},
+                6:{'duracion': 2, 'descripcion': 'Tarea 6', 'tareas_previas': [3]},
+                7:{'duracion': 1, 'descripcion': 'Tarea 7', 'tareas_previas': [4, 5, 6]}
+}
+
+def test():
+    grafo = rc.inicializarGrafo(testTareasConInicioYFin)
+    rc.mostrarGrafo(grafo, testTareasConInicioYFin)
+
+botonPrueba = tk.Button(window, text="Prueba", command=test)
+botonPrueba.pack()
 
 # Start the main event loop
 window.mainloop()

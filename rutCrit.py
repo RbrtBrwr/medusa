@@ -13,14 +13,14 @@ tareas = [
 
 task_numbers = {1, 2, 3, 4, 5, 6, 7}
 
-def calcularRutaCritica(grafo):
-    # Calculo la ruta crítica
-    rutaCritica = nx.dag_longest_path(grafo)
+# def calcularRutaCritica(grafo):
+#     # Calculo la ruta crítica
+#     rutaCritica = nx.dag_longest_path(grafo)
 
-    # Calculo la duración total de la ruta crítica
-    duracionTotal = sum(grafo.nodes[n]['duracion'] for n in rutaCritica)
+#     # Calculo la duración total de la ruta crítica
+#     duracionTotal = sum(grafo.nodes[n]['duracion'] for n in rutaCritica)
 
-    return rutaCritica, duracionTotal
+#     return rutaCritica, duracionTotal
 
 
 def inicializarGrafo(diccionarioTareas):
@@ -53,8 +53,10 @@ def inicializarGrafo(diccionarioTareas):
 
     return grafo
 
-def mostrarGrafo(grafo):
-    rutaCritica, duracion = calcularRutaCritica(grafo)
+def mostrarGrafo(grafo, diccionarioTareas):
+    # earliestStart = calcularEarlyStart(grafo, diccionarioTareas)
+    # latestStart = calcularLateStart(grafo, earliestStart, diccionarioTareas)
+    # rutaCritica, duracion = calcularRutaCritica(grafo, earliestStart, latestStart)
 
     # posiciono los nodos
     posiciones = nx.planar_layout(grafo)
@@ -78,5 +80,80 @@ def mostrarGrafo(grafo):
     plt.axis('off')
     plt.show()
 
-grafo = inicializarGrafo(tareas)
-mostrarGrafo(grafo)
+def getStartFinishCandidates(diccionarioTareas):
+    startCandidates = []
+    endCandidates = []
+    for tarea in diccionarioTareas.keys():
+        if diccionarioTareas[tarea]['tareas_previas'] == []:
+            startCandidates.append(tarea)
+        
+        isCandidate = True
+        for i in diccionarioTareas:
+            if tarea in i['tareas_previas']:
+                isCandidate = False
+                break
+        if isCandidate:
+            endCandidates.append(tarea)
+    return startCandidates, endCandidates
+
+def setStartFinish(diccionarioTareas):
+    startCandidates, endCandidates = getStartFinishCandidates(diccionarioTareas)
+    startIndex = 998
+    endIndex = 999
+    if len(startCandidates) > 1:
+        # Agregar una nueva tarea que va a ser el inicio
+        diccionarioTareas[998] = {'numero': 998, 'duracion': 0, 'descripcion': 'Start', 'tareas_previas': []}
+        for i in startCandidates:
+            diccionarioTareas[i]['tareas_previas'].append(998)
+    else:
+        startIndex = startCandidates[0]
+    if len(endCandidates) > 1:
+        # Agregar una nueva tarea que va a ser el fin
+        diccionarioTareas[999] = {'numero': 999, 'duracion': 0, 'descripcion': 'End', 'tareas_previas': []}
+        for i in endCandidates:
+            diccionarioTareas[999]['tareas_previas'].append(i)
+    else:
+        endIndex = endCandidates[0]
+    
+    return inicializarGrafo(diccionarioTareas), startIndex, endIndex
+
+def calcularRutaCritica(diccionarioTareas, startIndex, endIndex):
+    # {nroNodo: {ES: 0, EF: 0, LS: 0, LF: 0}}
+    startFinish = forwardPass(diccionarioTareas)
+    startFinish = backwardPass(diccionarioTareas, startFinish)
+
+def forwardPass(diccionarioTareas, startIndex, endIndex):
+    startFinish = {}
+    startFinish[startIndex] = {'ES': 0, 'EF': diccionarioTareas[startIndex]['duracion'], 'LS': 0, 'LF': 0}
+    
+
+# def calcularEarlyStart(grafo, mapaTareas):
+#     earlyStart = {}
+#     for nodo in nx.topological_sort(grafo):
+#         maxEarlyStart = 0
+#         for predecesor in mapaTareas[nodo]['tareas_previas']:
+#             maxEarlyStart = max(maxEarlyStart, earlyStart[predecesor] + mapaTareas[predecesor]['duracion'])
+#         earlyStart[nodo] = maxEarlyStart
+#     return earlyStart
+
+# def calcularLateStart(earlyStart, mapaTareas):
+#     lateStart = {}
+#     # A cada nodo le asigno lo mas tarde que puede empezar
+#     for nodo in mapaTareas.keys():
+
+#         predecesores = mapaTareas[nodo]['tareas_previas']
+#         duracionPredecesores = [mapaTareas[predecesor]['duracion'] for predecesor in predecesores]
+#         lateStart[nodo] = earlyStart[max(duracionPredecesores, default=0)]
+#     return lateStart
+
+# def calcularRutaCritica(grafo, earliest, latest):
+#     rutaCritica = []
+#     duracionRutaCritica = 0
+#     for nodo in grafo.nodes:
+#         if earliest[nodo] == latest[nodo]:
+#             rutaCritica.append(nodo)
+#             duracionRutaCritica += grafo.nodes[nodo]['duracion']
+#     return rutaCritica, duracionRutaCritica
+
+# grafo = inicializarGrafo(tareas)
+# mostrarGrafo(grafo)
