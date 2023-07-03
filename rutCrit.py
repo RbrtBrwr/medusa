@@ -10,6 +10,7 @@ def calculate_critical_path(tasks):
         G.add_node(str(task['numero']), duration=task['duracion'], description=task['descripcion'])
 
 
+
     # Add edges representing task dependencies
     for task in tasks:
         for prev_task in task['tareas_previas']:

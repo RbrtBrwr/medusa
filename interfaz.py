@@ -3,16 +3,19 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import rutCrit as rc
 
-diccionarioTareas = {}
+tasks = []
+task_numbers = set()
+
 def revisarNoInterdependencia(numeroTareaNueva, predecesores):
     if int(numeroTareaNueva) in predecesores:
         return True
     
     for i in predecesores:
-        if i in diccionarioTareas.keys():
-            siguientesPredecesores = diccionarioTareas[i]['tareas_previas']
-            if revisarNoInterdependencia(numeroTareaNueva, siguientesPredecesores):
-                return True
+        for task in tasks:
+            if i in task['numero']:
+                siguientesPredecesores = ['tareas_previas']
+                if revisarNoInterdependencia(numeroTareaNueva, siguientesPredecesores):
+                    return True
         
     return False
 
@@ -64,19 +67,28 @@ def agregarTareaALista(numero, descripcion, duracion, predecesoras):
         listaTareas.insert(tk.END, numero + " - " + descripcion + " - " + duracion)
 
     tareaAAgregar = {
+        'numero': int(numero),
         'duracion': int(duracion),
         'descripcion': descripcion,
         'tareas_previas': predecesoras
     }
 
-    diccionarioTareas[int(numero)] = tareaAAgregar
-    # tareas.append(tareaAAgregar)
+    tasks.append(tareaAAgregar)
     clearEntries()
 
 # Cuando le das aqui va a mostrar el grafo con la ruta critica
 def mostrarRuta_clicked():
-    grafo = rc.setStartFinish(diccionarioTareas)
-    rc.mostrarGrafo(grafo)
+    G, critical_path, total_duration = rc.calculate_critical_path(tasks)
+
+    # Print the critical path
+    print("Critical Path:")
+    path = " -> ".join(critical_path)
+    print(path)
+
+    print(f"Total Duration: {total_duration} units")
+
+    # Draw the graph
+    rc.draw_graph(G, tasks, critical_path)
 
 # Cuando le das aqui va a borrar la tarea elejida
 def borrarTarea_clicked():
@@ -96,24 +108,19 @@ def eliminarTareaDeLista(numeroEliminar):
             listaTareas.delete(i)
 
 def eliminarTarea(numeroEliminar):
-    del diccionarioTareas[numeroEliminar]
-    eliminarDePredecesores(numeroEliminar)
-
-def eliminarDePredecesores(numeroEliminar):
-    for i in diccionarioTareas.keys():
-        diccionarioTareas[i]['tareas_previas'] = [x for x in diccionarioTareas[i]['tareas_previas'] if x != numeroEliminar]
+    tasks = [task for task in tasks if task['numero'] != numeroEliminar]
 
 
 # Esto solo resetea el grafo
 # TODO: funcionalidad
 def borrarProyecto_clicked():
     confirm = input("¿Está seguro que desea borrar el proyecto? (y/n): ") == 'y' or input("¿Está seguro que desea borrar el proyecto? (y/n): ") == 'Y'
-    resetearTareas(diccionarioTareas)
+    resetearTareas()
 
 
 
-def resetearTareas(tareas):
-    tareas = {0: {'duracion': 0, 'descripcion': 'Inicio', 'tareas_previas': []}}
+def resetearTareas():
+    tasks = []
 
 def clearEntries():
     numeroTarea.delete(0, 'end')
@@ -173,14 +180,6 @@ tareaAEliminar.pack()
 borrarTarea.pack()
 borrarProyecto.pack()
 
-testTareasConInicioYFin = {1:{'duracion': 4, 'descripcion': 'Tarea 1', 'tareas_previas': []},
-              2:{'duracion': 2, 'descripcion': 'Tarea 2', 'tareas_previas': [1]},
-              3:{'duracion': 5, 'descripcion': 'Tarea 3', 'tareas_previas': [1]},
-                4:{'duracion': 3, 'descripcion': 'Tarea 4', 'tareas_previas': [1]},
-                5:{'duracion': 3, 'descripcion': 'Tarea 5', 'tareas_previas': [2, 3]},
-                6:{'duracion': 2, 'descripcion': 'Tarea 6', 'tareas_previas': [3]},
-                7:{'duracion': 1, 'descripcion': 'Tarea 7', 'tareas_previas': [4, 5, 6]}
-}
 
 tareas = [
     {'numero': 1, 'duracion': 4, 'descripcion': 'Task 1', 'tareas_previas': []},
