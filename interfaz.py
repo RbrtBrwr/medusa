@@ -256,9 +256,28 @@ testTareasConInicioYFin = {1:{'duracion': 4, 'descripcion': 'Tarea 1', 'tareas_p
                 7:{'duracion': 1, 'descripcion': 'Tarea 7', 'tareas_previas': [4, 5, 6]}
 }
 
+tareas = [
+    {'numero': 1, 'duracion': 4, 'descripcion': 'Task 1', 'tareas_previas': []},
+    {'numero': 2, 'duracion': 3, 'descripcion': 'Task 2', 'tareas_previas': [1]},
+    {'numero': 3, 'duracion': 5, 'descripcion': 'Task 3', 'tareas_previas': [1]},
+    {'numero': 4, 'duracion': 2, 'descripcion': 'Task 4', 'tareas_previas': [2, 3]},
+    {'numero': 5, 'duracion': 3, 'descripcion': 'Task 5', 'tareas_previas': [4]},
+    {'numero': 6, 'duracion': 1, 'descripcion': 'Task 6', 'tareas_previas': [4]},
+    {'numero': 7, 'duracion': 2, 'descripcion': 'Task 7', 'tareas_previas': [5, 6]},
+]
+
 def test():
-    grafo = rc.inicializarGrafo(testTareasConInicioYFin)
-    rc.mostrarGrafo(grafo, testTareasConInicioYFin)
+    G, critical_path, total_duration = rc.calculate_critical_path(tareas)
+
+    # Print the critical path
+    print("Critical Path:")
+    path = " -> ".join(critical_path)
+    print(path)
+
+    print(f"Total Duration: {total_duration} units")
+
+    # Draw the graph
+    rc.draw_graph(G, tareas, critical_path)
 
 botonPrueba = tk.Button(window, text="Prueba", command=test)
 botonPrueba.pack()
