@@ -108,19 +108,23 @@ def eliminarTareaDeLista(numeroEliminar):
             listaTareas.delete(i)
 
 def eliminarTarea(numeroEliminar):
+    global tasks
     tasks = [task for task in tasks if task['numero'] != numeroEliminar]
 
 
 # Esto solo resetea el grafo
 # TODO: funcionalidad
 def borrarProyecto_clicked():
-    confirm = input("¿Está seguro que desea borrar el proyecto? (y/n): ") == 'y' or input("¿Está seguro que desea borrar el proyecto? (y/n): ") == 'Y'
     resetearTareas()
 
 
 
 def resetearTareas():
+    global tasks
     tasks = []
+    for i in range(listaTareas.size()):
+        print(i)
+        listaTareas.delete(i)
 
 def clearEntries():
     numeroTarea.delete(0, 'end')
