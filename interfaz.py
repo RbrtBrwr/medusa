@@ -13,7 +13,7 @@ def revisarNoInterdependencia(numeroTareaNueva, predecesores):
     
     for i in predecesores:
         for task in tasks:
-            if i in task['numero']:
+            if i == task['numero']:
                 siguientesPredecesores = ['tareas_previas']
                 if revisarNoInterdependencia(numeroTareaNueva, siguientesPredecesores):
                     return True
@@ -80,7 +80,7 @@ def agregarTareaALista(numero, descripcion, duracion, predecesoras):
 
 # Cuando le das aqui va a mostrar el grafo con la ruta critica
 def mostrarRuta_clicked():
-    G, critical_path, total_duration = rc.calculate_critical_path(tasks)
+    G, critical_path, total_duration, earliest_start, earliest_finish, latest_start, latest_finish, slack = rc.calculate_critical_path(tasks)
 
     # Print the critical path
     print("Critical Path:")
@@ -90,7 +90,7 @@ def mostrarRuta_clicked():
     print(f"Total Duration: {total_duration} units")
 
     # Draw the graph
-    rc.draw_graph(G, tasks, critical_path)
+    rc.draw_graph(G, tasks, critical_path, earliest_start, earliest_finish, latest_start, latest_finish, slack)
 
 # Cuando le das aqui va a borrar la tarea elejida
 def borrarTarea_clicked():
