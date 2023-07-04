@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 import networkx as nx
 import matplotlib.pyplot as plt
 import rutCrit as rc
@@ -39,6 +40,7 @@ def nuevaTarea_clicked():
             eliminarTarea(int(nuevoNumero))
         return nuevoNumero, nuevaDescripcion, nuevaDuracion, nuevoNombre
     else:
+        messagebox.showerror("Entradas invalidas")
         print("Entradas invalidas")
 
 
@@ -196,7 +198,7 @@ tareas = [
 ]
 
 def test():
-    G, critical_path, total_duration = rc.calculate_critical_path(tareas)
+    G, critical_path, total_duration, earliest_start, earliest_finish, latest_start, latest_finish, slack = rc.calculate_critical_path(tareas)
 
     # Print the critical path
     print("Critical Path:")
@@ -206,7 +208,7 @@ def test():
     print(f"Total Duration: {total_duration} units")
 
     # Draw the graph
-    rc.draw_graph(G, tareas, critical_path)
+    rc.draw_graph(G, tareas, critical_path, earliest_start, earliest_finish, latest_start, latest_finish, slack)
 
 botonPrueba = tk.Button(window, text="Prueba", command=test)
 botonPrueba.pack()
